@@ -54,7 +54,7 @@ namespace Signature.Entity
 
 		private void CreateKeys()
 		{
-			RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+			RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
 
 			byte[] publicKey = Encoding.UTF8.GetBytes(rsa.ToXmlString(false));
 			byte[] privateKey = Encoding.UTF8.GetBytes(rsa.ToXmlString(true));

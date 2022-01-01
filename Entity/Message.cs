@@ -26,9 +26,9 @@ namespace Signature.Entity
 
 		public override string ToString()
 		{
-			return "\n=============================\n" +
+			return "=============================\n" +
 				  $"Id: {this.Id}\nTipo: {this.MessageType.GetDisplayName()}\nRemetente: {this.FromPerson.Value}\nDestinatário: {this.ToPerson.Value}\nMensagem: {this.Content}\nData de Envio: {this.CreationDate}" +
-				   "\n=============================";
+				   "\n=============================\n";
 		}
 	}
 }

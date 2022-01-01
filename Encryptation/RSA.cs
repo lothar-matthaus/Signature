@@ -11,12 +11,13 @@ namespace Signature.Encryptation
 {
 	static class RSA
 	{
+		private static int MESSAGE_SIZE = 2048;
 
 		public static bool CheckSignature(string stringKey, byte[] signedMessageContent, byte[] signature)
 		{
 			try
 			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider();
+				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
 				SHA1Managed hash = new SHA1Managed();
 				byte[] hashedData;
 
@@ -43,7 +44,7 @@ namespace Signature.Encryptation
 		{
 			try
 			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider();
+				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
 				SHA1Managed shaManaged = new SHA1Managed();
 
 				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
@@ -67,7 +68,7 @@ namespace Signature.Encryptation
 		{
 			try
 			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider();
+				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
 
 				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
 
@@ -87,7 +88,7 @@ namespace Signature.Encryptation
 		{
 			try
 			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider();
+				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
 
 				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
 

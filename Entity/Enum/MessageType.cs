@@ -4,9 +4,9 @@ namespace Signature.Entity.Enum
 {
 	public enum MessageType
 	{
-		[Display(Name = "Assinado")]
+		[Display(Name = "Assinada")]
 		Signed = 1,
-		[Display(Name = "Não assinado")]
+		[Display(Name = "Não assinada")]
 		Unsigned = 2
 	}
 }

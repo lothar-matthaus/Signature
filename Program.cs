@@ -11,10 +11,10 @@ namespace Signature
 	internal class Program
 	{
 
-		static private Message SendSignedMessage()
+		static private void SendMessage(ref Message message)
 		{
-			Message message = new Message();
 			Person fromPerson, toPerson;
+			Console.WriteLine("----- Enviar nova mensagem -----");
 
 			try
 			{
@@ -27,8 +27,7 @@ namespace Signature
 
 				while (fromPerson == null)
 				{
-					Console.WriteLine("Pessoa não existe. Pressione uma tecla para continuar.");
-					Console.ReadKey();
+					Pause("A pessoa não existe.");
 
 					Console.Write("CPF/CNPJ do Remetente: ");
 					personDocument = Console.ReadLine();
@@ -43,8 +42,7 @@ namespace Signature
 
 				while (toPerson == null)
 				{
-					Console.WriteLine("Pessoa não existe. Pressione uma tecla para continuar.");
-					Console.ReadKey();
+					Pause("A pessoa não existe.");
 
 					Console.Write("CPF/CNPJ do Destinatário: ");
 					personDocument = Console.ReadLine();
@@ -55,75 +53,25 @@ namespace Signature
 				Console.Write("Mensage: ");
 				string messageContent = Console.ReadLine();
 
-				message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
-				message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
-				message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
-				message.Signature = RSA.Sign(fromPerson.PrivateKey, Convert.FromBase64String(message.Content));
-				message.MessageType = MessageType.Signed;
-
-				return message;
-			}
-			catch (Exception)
-			{
-				throw;
-			}
-		}
-
-		static private Message SendUnsignedMessage()
-		{
-			Message message = new Message();
-			Person fromPerson, toPerson;
-
-			try
-			{
-				Console.WriteLine("Indique o remetente e destinatário.");
-
-				Console.Write("CPF/CNPJ do Remetente: ");
-				string personDocument = Console.ReadLine();
-
-				fromPerson = PersonRepository.Get(personDocument);
-
-				while (fromPerson == null)
+				if (message.MessageType == MessageType.Signed)
 				{
-					Console.WriteLine("Pessoa não existe. Pressione uma tecla para continuar.");
-					Console.ReadKey();
-
-					Console.Write("CPF/CNPJ do Remetente: ");
-					personDocument = Console.ReadLine();
-
-					fromPerson = PersonRepository.Get(personDocument);
+					message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
+					message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
+					message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
+					message.Signature = RSA.Sign(fromPerson.PrivateKey, Convert.FromBase64String(message.Content));
 				}
-
-				Console.Write("CPF/CNPJ do Destinatário: ");
-				personDocument = Console.ReadLine();
-
-				toPerson = PersonRepository.Get(personDocument);
-
-				while (toPerson == null)
+				else
 				{
-					Console.WriteLine("Pessoa não existe. Pressione uma tecla para continuar.");
-					Console.ReadKey();
-
-					Console.Write("CPF/CNPJ do Destinatário: ");
-					personDocument = Console.ReadLine();
-
-					toPerson = PersonRepository.Get(personDocument);
+					message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
+					message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
+					message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
+					message.Signature = String.Empty;
+					message.MessageType = MessageType.Unsigned;
 				}
-
-				Console.Write("Mensage: ");
-				string messageContent = Console.ReadLine();
-
-				message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
-				message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
-				message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
-				message.Signature = String.Empty;
-				message.MessageType = MessageType.Unsigned;
-
-				return message;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception(ex.Message);
 			}
 		}
 
@@ -131,43 +79,52 @@ namespace Signature
 		{
 			int opc = 0;
 			Console.WriteLine("------------------------------\n" +
-							  $"-1 - {MessageType.Signed.GetDisplayName()}\n-2 - {MessageType.Unsigned.GetDisplayName()}");
+							  $"-1 - {MessageType.Signed.GetDisplayName()}\n-2 - {MessageType.Unsigned.GetDisplayName()}" +
+							  $"\n------------------------------");
 
 			Console.Write("Opção: ");
 			try
 			{
 				opc = int.Parse(Console.ReadLine());
 
+				Message message = new Message();
+
 				switch (opc)
 				{
 					case 1:
 					{
-						Message message = SendSignedMessage();
+						Console.Clear();
+						message.MessageType = MessageType.Signed;
+						SendMessage(ref message);
 						MessageRepository.Save(message);
+						Console.ForegroundColor = ConsoleColor.Green;
+						Pause("Mensagem enviada com sucesso. ");
 						break;
 					}
 					case 2:
 					{
-						Message message = SendUnsignedMessage();
+						Console.Clear();
+						message.MessageType = MessageType.Unsigned;
+						SendMessage(ref message);
 						MessageRepository.Save(message);
+						Console.ForegroundColor = ConsoleColor.Green;
+						Pause("Mensagem enviada com sucesso. ");
 						break;
 					}
 					default:
 					{
-						Console.WriteLine("Opção inválida...");
+						Console.ForegroundColor = ConsoleColor.Red;
+						Pause("Opção inválida. ");
 						break;
 					}
-
-
 				}
-
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.Message);
+				Console.ForegroundColor = ConsoleColor.Red;
+				Pause(ex.Message + " ");
 				return;
 			}
-
 		}
 
 		private static void ProcessMessage(Message message)
@@ -189,24 +146,20 @@ namespace Signature
 					{
 						Console.Clear();
 
-						Console.WriteLine("A chave pública é válida.\nPressione uma tecla para ver a mensagem decifrada.");
-						Console.ReadKey();
+						Pause("A chave pública é válida.");
 
 						string privateKey = PersonRepository.Get(message.ToPerson.Key).PrivateKey;
 
-						string decodedMessage = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
+						message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
 
 						Console.Clear();
-						Console.WriteLine("Mensagem decodificada: {0}", decodedMessage + "\nPressione uma tecla para continuar...");
-						Console.ReadKey();
-						Console.Clear();
+						Pause($"Mensagem decodificada:{message}");
 					}
 					else
 					{
 						Console.Clear();
-						Console.WriteLine("A assinatura é inválida.\nPressione uma tecla para continuar...");
-						Console.ReadKey();
-						Console.Clear();
+						Console.ForegroundColor = ConsoleColor.Red;
+						Pause("A assinatura é inválida. ");
 						return;
 					}
 				}
@@ -221,18 +174,15 @@ namespace Signature
 				try
 				{
 					string privateKey = PersonRepository.Get(message.ToPerson.Key).PrivateKey;
-					string decodedMessage = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
+					message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
 
 					Console.Clear();
-					Console.WriteLine("Mensagem decodificada: {0}", decodedMessage + "\nPressione uma tecla para continuar...");
-					Console.ReadKey();
-					Console.Clear();
+					Pause($"Mensagem decodificada:\n{message}");
 				}
 				catch (Exception ex)
 				{
-					Console.WriteLine(ex.Message + "\nPressione uma tecla para continuar...");
-					Console.ReadKey();
-					Console.Clear();
+					Console.ForegroundColor = ConsoleColor.Red;
+					Pause(ex.Message);
 				}
 			}
 		}
@@ -243,44 +193,63 @@ namespace Signature
 
 			string document = "";
 
-			Console.WriteLine("Entrar como: (CPF/CNPJ)");
-			document = Console.ReadLine();
-
-			Person person = PersonRepository.Get(document);
-
-			if (person == null)
+			try
 			{
-				Console.WriteLine("Pessoa não existe.");
-				return;
-			}
+				Console.WriteLine("Destinatário: (CPF/CNPJ)");
+				document = Console.ReadLine();
 
-			messages.RemoveAll(message => !message.ToPerson.Key.Equals(person.DocumentNumber));
+				Person person = PersonRepository.Get(document);
 
-			if (messages == null || messages.Count == 0)
-			{
-				Console.WriteLine("Não há mensagens para mostrar.");
-				return;
-			}
+				if (person == null)
+				{
+					Console.Clear();
+					Pause("Pessoa não existe. ");
+					return;
+				}
 
-			messages.ForEach(message =>
-			{
-				Console.WriteLine(message);
-			});
+				messages.RemoveAll(message => !message.ToPerson.Key.Equals(person.DocumentNumber));
 
-			Console.Write("ID da Mensagem: ");
-			int id = int.Parse(Console.ReadLine());
+				if (messages == null || messages.Count == 0)
+				{
+					Console.Clear();
+					Pause($"Não há mensagens com o destinatário '{person.DocumentNumber}' para mostrar. ");
+					return;
+				}
 
-			Message message = messages.Find(message => message.Id == id);
+				messages.ForEach(message =>
+				{
+					Console.Write(message);
+				});
 
-			while (message == null)
-			{
 				Console.Write("ID da Mensagem: ");
-				id = int.Parse(Console.ReadLine());
+				int id = int.Parse(Console.ReadLine());
 
-				message = messages.Find(message => message.Id == id);
+				Message message = messages.Find(message => message.Id == id);
+
+				while (message == null)
+				{
+					Console.Clear();
+					Pause($"Não há mensagens com o ID '{id}' informado. ");
+
+					messages.ForEach(message =>
+					{
+						Console.Write(message);
+					});
+
+					Console.Write("ID da Mensagem: ");
+					id = int.Parse(Console.ReadLine());
+
+					message = messages.Find(message => message.Id == id);
+				}
+
+				ProcessMessage(message);
 			}
-
-			ProcessMessage(message);
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Pause(ex.Message);
+				return;
+			}
 		}
 
 		static void ShowAllPersons()
@@ -298,7 +267,7 @@ namespace Signature
 		static void CreatePerson()
 		{
 			Person person = new Person();
-
+			Console.WriteLine("----- Criar nova pessoa ------");
 			try
 			{
 				Console.Write("Nome: ");
@@ -309,19 +278,34 @@ namespace Signature
 
 				while (!person.CheckIfDocumentIsValid(person.DocumentNumber))
 				{
-					Console.Write("O documento digitado não é válido.\n");
+					Console.ForegroundColor = ConsoleColor.Red;
+					Pause("O documento digitado não é válido. ");
 					Console.Write("CPF/CNPJ: ");
 					person.DocumentNumber = Console.ReadLine();
 				}
 
 				PersonRepository.Save(person);
+				Pause("Pessoa criada com sucesso. ");
 			}
 			catch (Exception ex)
 			{
-				Console.Write("Erro ao criar pessoa. {0}", ex.Message);
-				Console.ReadKey();
-				Menu();
+				Console.ForegroundColor = ConsoleColor.Red;
+				Pause($"Erro ao criar pessoa. {ex.Message}");
+				return;
 			}
+		}
+
+		static void Pause(string message = null)
+		{
+			Console.WriteLine($"{message}Pressione uma tecla para continuar...");
+
+			Console.ForegroundColor = ConsoleColor.Gray;
+
+			if (Console.KeyAvailable)
+				Console.ReadKey(true);
+
+			Console.ReadKey();
+			Console.Clear();
 		}
 
 		static void Menu()
@@ -343,7 +327,6 @@ namespace Signature
 					{
 						Console.Clear();
 						CreatePerson();
-						Console.Clear();
 						Menu();
 						break;
 					}
@@ -351,9 +334,7 @@ namespace Signature
 					{
 						Console.Clear();
 						ShowAllPersons();
-						Console.WriteLine("Pressione uma tecla para continuar...");
-						Console.ReadKey();
-						Console.Clear();
+						Pause();
 						Menu();
 						break;
 					}
@@ -361,9 +342,6 @@ namespace Signature
 					{
 						Console.Clear();
 						SendMessage();
-						Console.WriteLine("Pressione uma tecla para continuar...");
-						Console.ReadKey();
-						Console.Clear();
 						Menu();
 						break;
 					}
@@ -371,23 +349,20 @@ namespace Signature
 					{
 						Console.Clear();
 						ShowMessages();
-						Console.WriteLine("Pressione uma tecla para continuar...");
-						Console.ReadKey();
-						Console.Clear();
 						Menu();
 						break;
 					}
 					default:
+						Console.Clear();
+						Pause("Aplicação finalizada. ");
 						break;
 				}
 			}
 			catch (Exception ex)
 			{
 				Console.Clear();
-				Console.WriteLine(ex.Message);
-				Console.WriteLine("Pressione uma tecla para continuar...");
-				Console.ReadKey();
-				Console.Clear();
+				Console.ForegroundColor = ConsoleColor.Red;
+				Pause(ex.Message + " ");
 				Menu();
 			}
 
@@ -409,7 +384,7 @@ namespace Signature
 
 				Person bob = new Person();
 
-				bob.Name = "Bob Maria da Silva";
+				bob.Name = "Bob Joelson Mota";
 				bob.DocumentNumber = "82341131321";
 				bob.PersonType = PersonType.Individual;
 
