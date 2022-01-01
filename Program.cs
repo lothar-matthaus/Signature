@@ -388,11 +388,11 @@ namespace Signature
 				bob.DocumentNumber = "82341131321";
 				bob.PersonType = PersonType.Individual;
 
-				if (PersonRepository.Get(alice.DocumentNumber) == null && PersonRepository.Get(bob.DocumentNumber) == null)
-				{
+				if (PersonRepository.Get(alice.DocumentNumber) == null)
 					PersonRepository.Save(alice);
+
+				if (PersonRepository.Get(bob.DocumentNumber) == null)
 					PersonRepository.Save(bob);
-				}
 
 				Menu();
 			}
