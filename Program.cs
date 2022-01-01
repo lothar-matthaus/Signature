@@ -63,7 +63,7 @@ namespace Signature
 
 				return message;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				throw;
 			}
@@ -113,7 +113,7 @@ namespace Signature
 				Console.Write("Mensage: ");
 				string messageContent = Console.ReadLine();
 
-				message.FromPerson = new KeyValuePair<string, string>( fromPerson.DocumentNumber, fromPerson.Name);
+				message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
 				message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
 				message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
 				message.Signature = String.Empty;
@@ -121,7 +121,7 @@ namespace Signature
 
 				return message;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				throw;
 			}
@@ -395,26 +395,36 @@ namespace Signature
 
 		static void Main(string[] args)
 		{
+
 			PersonRepository.InitializePersonRepository();
 			MessageRepository.InitializeMessageRepository();
-			Menu();
-			
-			//Message message = new Message();
 
-			//message.FromPerson = lothar.DocumentNumber;
-			//message.ToPerson = mateus.DocumentNumber;
-			//message.Content = RSA.EncryptMessage(lothar.PrivateKey, Encoding.UTF8.GetBytes(messageContent));
-			//message.Signature = RSA.Sign(lothar.PrivateKey, Convert.FromBase64String(message.Content));
+			try
+			{
+				Person alice = new Person();
 
-			//bool isValidSignature = RSA.CheckSignature(lothar.PrivateKey, Convert.FromBase64String(message.Content), Convert.FromBase64String(message.Signature));
+				alice.Name = "Alice Maria da Silva";
+				alice.DocumentNumber = "88273341341";
+				alice.PersonType = PersonType.Individual;
 
-			//Console.WriteLine($"Mensagem original: {messageContent}");
+				Person bob = new Person();
 
-			//Console.WriteLine($"Mensagem cifrada: {message.Content}");
+				bob.Name = "Bob Maria da Silva";
+				bob.DocumentNumber = "82341131321";
+				bob.PersonType = PersonType.Individual;
 
-			//string decryptedMessage = RSA.DecrypteMessage(lothar.PublicKey, Convert.FromBase64String(message.Content));
+				if (PersonRepository.Get(alice.DocumentNumber) == null && PersonRepository.Get(bob.DocumentNumber) == null)
+				{
+					PersonRepository.Save(alice);
+					PersonRepository.Save(bob);
+				}
 
-			// Console.WriteLine($"Mensagem decifrada com a chave pública do remetente: {decryptedMessage}");
+				Menu();
+			}
+			catch (Exception ex)
+			{
+				Console.Write(ex.Message);
+			}
 		}
 	}
 }
