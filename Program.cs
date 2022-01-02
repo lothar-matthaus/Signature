@@ -50,7 +50,7 @@ namespace Signature
 					toPerson = PersonRepository.Get(personDocument);
 				}
 
-				Console.Write("Mensage: ");
+				Console.Write("Mensagem: ");
 				string messageContent = Console.ReadLine();
 
 				if (message.MessageType == MessageType.Signed)
@@ -58,7 +58,14 @@ namespace Signature
 					message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
 					message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
 					message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
-					message.Signature = RSA.Sign(fromPerson.PrivateKey, Convert.FromBase64String(message.Content));
+
+					Console.Write("Insira a chave privada do Remetente: ");
+					string privateKey = Console.ReadLine();
+
+					if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
+					{
+						message.Signature = RSA.Sign(privateKey, Convert.FromBase64String(message.Content));
+					}
 				}
 				else
 				{
@@ -140,32 +147,37 @@ namespace Signature
 					Console.Write("Digite a chave pública do remetente:");
 					string publicKey = Console.ReadLine();
 
-					bool isValidSignature = RSA.CheckSignature(publicKey, Convert.FromBase64String(message.Content), Convert.FromBase64String(message.Signature));
-
-					if (isValidSignature)
+					if (RSA.ValidateKey(publicKey, KeyType.PublicKey))
 					{
-						Console.Clear();
+						if (RSA.CheckSignature(publicKey, Convert.FromBase64String(message.Content), Convert.FromBase64String(message.Signature)))
+						{
+							Console.Clear();
 
-						Pause("A chave pública é válida.");
+							Console.ForegroundColor = ConsoleColor.Green;
+							Pause("A chave pública é válida. \n");
 
-						string privateKey = PersonRepository.Get(message.ToPerson.Key).PrivateKey;
+							Console.Write("Digite a chave privada do destinatário:");
+							string privateKey = Console.ReadLine();
 
-						message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
+							if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
+							{
+								message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
 
-						Console.Clear();
-						Pause($"Mensagem decodificada:{message}");
-					}
-					else
-					{
-						Console.Clear();
-						Console.ForegroundColor = ConsoleColor.Red;
-						Pause("A assinatura é inválida. ");
-						return;
+								Console.Clear();
+								Pause($"Mensagem decodificada:\n{message}");
+							}
+						}
+						else
+						{
+							Console.Clear();
+							Console.ForegroundColor = ConsoleColor.Red;
+							Pause("A assinatura é inválida.\n");
+							return;
+						}
 					}
 				}
 				catch (Exception)
 				{
-
 					throw;
 				}
 			}
@@ -173,8 +185,12 @@ namespace Signature
 			{
 				try
 				{
-					string privateKey = PersonRepository.Get(message.ToPerson.Key).PrivateKey;
-					message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
+					Console.Write("Digite a chave privada do destinatário:");
+					string privateKey = Console.ReadLine();
+
+					if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
+
+						message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
 
 					Console.Clear();
 					Pause($"Mensagem decodificada:\n{message}");
@@ -284,7 +300,11 @@ namespace Signature
 					person.DocumentNumber = Console.ReadLine();
 				}
 
+				person.CreateKeys();
+
 				PersonRepository.Save(person);
+
+				Console.ForegroundColor = ConsoleColor.Green;
 				Pause("Pessoa criada com sucesso. ");
 			}
 			catch (Exception ex)
@@ -389,10 +409,16 @@ namespace Signature
 				bob.PersonType = PersonType.Individual;
 
 				if (PersonRepository.Get(alice.DocumentNumber) == null)
+				{
+					alice.CreateKeys();
 					PersonRepository.Save(alice);
+				}
 
 				if (PersonRepository.Get(bob.DocumentNumber) == null)
+				{
+					bob.CreateKeys();
 					PersonRepository.Save(bob);
+				}
 
 				Menu();
 			}

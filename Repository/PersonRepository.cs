@@ -8,24 +8,20 @@ namespace Signature.Repository
 {
 	static class PersonRepository
 	{
-		static string pathDirectory = @"C:/DataFiles/";
-		static string filePath = @"C:/DataFiles/Person.json";
+		static string pathDirectory = "./DataFiles/";
+		static string filePath = "./DataFiles/Person.json";
+		static string privateKeysDirectory = "./DataFiles/Person/Private Keys/";
 
 		public static void InitializePersonRepository()
 		{
 			if (!Directory.Exists(pathDirectory))
-			{
 				Directory.CreateDirectory(pathDirectory);
 
-				if (!File.Exists(filePath))
-					File.Create(filePath).Close();
-			}
-			else
-			{
-				if (!File.Exists(filePath))
-					File.Create(filePath).Close();
-
-			}
+			if (!File.Exists(filePath))
+				File.Create(filePath).Close();
+			
+			if (!Directory.Exists(privateKeysDirectory))
+				Directory.CreateDirectory(privateKeysDirectory);
 		}
 
 		public static List<Person> Get()

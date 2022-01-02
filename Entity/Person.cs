@@ -1,12 +1,8 @@
 ﻿using Signature.Entity.Enum;
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace Signature.Entity
 {
@@ -17,14 +13,7 @@ namespace Signature.Entity
 		public PersonType PersonType { get; set; }
 
 		// Conjunto de chaves da pessoa
-		public string PrivateKey { get; set; }
 		public string PublicKey { get; set; }
-
-		public Person()
-		{
-			CreateKeys();
-		}
-
 
 		private void CheckPersonType(string documentNumber)
 		{
@@ -32,7 +21,6 @@ namespace Signature.Entity
 				this.PersonType = PersonType.Individual;
 			else
 				this.PersonType = PersonType.Company;
-
 		}
 
 		public bool CheckIfDocumentIsValid(string documentNumber)
@@ -52,15 +40,44 @@ namespace Signature.Entity
 			return true;
 		}
 
-		private void CreateKeys()
+		public void CreateKeys()
 		{
-			RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
+			try
+			{
+				RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
 
-			byte[] publicKey = Encoding.UTF8.GetBytes(rsa.ToXmlString(false));
-			byte[] privateKey = Encoding.UTF8.GetBytes(rsa.ToXmlString(true));
+				byte[] publicKey = Encoding.UTF8.GetBytes(rsa.ToXmlString(false));
+				byte[] privateKey = Encoding.UTF8.GetBytes(rsa.ToXmlString(true));
 
-			this.PrivateKey = Convert.ToBase64String(privateKey);
-			this.PublicKey = Convert.ToBase64String(publicKey);
+				this.PublicKey = Convert.ToBase64String(publicKey);
+
+				string exportPrivateKey = Convert.ToBase64String(privateKey);
+				
+				FileStream fileStream = null;
+				StreamWriter streamWriter = null;
+				
+				try
+				{
+					string fileName = this.Name.Replace(" ", "_");
+
+					fileStream = new FileStream("./DataFiles/Person/Private Keys/" + fileName + ".pem", FileMode.Create, FileAccess.Write);
+					streamWriter = new StreamWriter(fileStream);
+
+					streamWriter.Write(exportPrivateKey);
+
+					streamWriter.Close();
+					fileStream.Close();
+				}
+				catch
+				{
+					throw new Exception($"Ocorreu um erro ao salvar a chave privada do usuário.");
+				}
+				
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Ocorreu um erro ao criar o par de chaves do usuário.\nErro: {ex.Message}");
+			}	
 		}
 
 		public override string ToString()

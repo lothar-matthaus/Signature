@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Signature.Entity.Enum;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,25 @@ namespace Signature.Encryptation
 	{
 		private static int MESSAGE_SIZE = 2048;
 
+		public static bool ValidateKey(string stringKey, KeyType keyType)
+		{
+			try
+			{
+				byte[] key = Convert.FromBase64String(stringKey);
+				stringKey = Encoding.UTF8.GetString(key);
+				
+				RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+
+				rsa.FromXmlString(stringKey);
+
+				return true;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Chave {keyType.GetDisplayName()} inválida. ");
+			}
+		}
+
 		public static bool CheckSignature(string stringKey, byte[] signedMessageContent, byte[] signature)
 		{
 			try
@@ -22,7 +42,6 @@ namespace Signature.Encryptation
 				byte[] hashedData;
 
 				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
-
 				rSACryptoServiceProvider.FromXmlString(stringKey);
 				bool isValidData = rSACryptoServiceProvider.VerifyData(signedMessageContent, CryptoConfig.MapNameToOID("SHA1"), signature);
 				hashedData = hash.ComputeHash(signedMessageContent);
@@ -36,7 +55,7 @@ namespace Signature.Encryptation
 			}
 			catch (Exception ex)
 			{
-				throw new Exception($"Erro ao checar a assinatura da mensagem.\nErro: {ex.Message}"); ;
+				throw new Exception(ex.Message);
 			}
 		}
 
@@ -98,7 +117,7 @@ namespace Signature.Encryptation
 
 				return Encoding.UTF8.GetString(decryptedData);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				throw new Exception($"Erro ao decifrar a mensagem.\nErro: {ex.Message}");
 			}

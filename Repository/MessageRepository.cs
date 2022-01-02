@@ -11,20 +11,15 @@ namespace Signature.Repository
 {
 	static class MessageRepository
 	{
-		static string pathDirectory = @"C:/DataFiles/";
-		static string filePath = @"C:/DataFiles/Messages.json";
+		static string pathDirectory = "./DataFiles/";
+		static string filePath = "./DataFiles/Messages.json";
 
 		public static void InitializeMessageRepository()
 		{
 			if (!Directory.Exists(pathDirectory))
-			{
 				Directory.CreateDirectory(pathDirectory);
-
-				if (!File.Exists(filePath))
-					File.Create(filePath).Close();
-			}
-			else
-				if (!File.Exists(filePath))
+			
+			if (!File.Exists(filePath))
 				File.Create(filePath).Close();
 		}
 
