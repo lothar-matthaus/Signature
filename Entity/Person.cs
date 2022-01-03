@@ -23,23 +23,6 @@ namespace Signature.Entity
 				this.PersonType = PersonType.Company;
 		}
 
-		public bool CheckIfDocumentIsValid(string documentNumber)
-		{
-			if (documentNumber.Length != 11)
-			{
-				if (documentNumber.Length != 14)
-					return false;
-			}
-			else
-			{
-				CheckPersonType(documentNumber);
-				return true;
-			}
-
-			CheckPersonType(documentNumber);
-			return true;
-		}
-
 		public void CreateKeys()
 		{
 			try

@@ -45,12 +45,12 @@ namespace Signature.Repository
 					fileStream.Close();
 				}
 			}
-			catch (IOException ex)
+			catch (Exception ex)
 			{
 				fileStream.Close();
 				streamReader.Close();
 
-				throw ex;
+				throw new Exception($"Ocorreu um erro ao carregar a lista de pessoas.\nErro: {ex.Message}");
 			}
 			return personList;
 		}
@@ -83,12 +83,12 @@ namespace Signature.Repository
 					return null;
 				}
 			}
-			catch (IOException ex)
+			catch (Exception ex)
 			{
 				fileStream.Close();
 				streamReader.Close();
 
-				throw ex;
+				throw new Exception($"Ocorreu um erro ao carregar uma pessoas específica.\nErro: {ex.Message}");
 			}
 		}
 
@@ -115,12 +115,12 @@ namespace Signature.Repository
 					fileStream.Close();
 				}
 			}
-			catch (IOException ex)
+			catch (Exception ex)
 			{
 				fileStream.Close();
 				streamWriter.Close();
 
-				throw ex;
+				throw new Exception($"Ocorreu um erro ao salvar a pessoa.\nErro: {ex.Message}");
 			}
 		}
 	}

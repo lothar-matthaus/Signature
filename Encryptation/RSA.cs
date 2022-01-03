@@ -8,119 +8,113 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace Signature.Encryptation
-{
-	static class RSA
-	{
-		private static int MESSAGE_SIZE = 2048;
+namespace Signature.Encryptation {
+    static class RSA {
+        private static int MESSAGE_SIZE = 2048;
 
-		public static bool ValidateKey(string stringKey, KeyType keyType)
-		{
-			try
-			{
-				byte[] key = Convert.FromBase64String(stringKey);
-				stringKey = Encoding.UTF8.GetString(key);
-				
-				RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+        public static bool ValidateKey(string stringKey, KeyType keyType) {
+            try {
+                byte[] key = Convert.FromBase64String(stringKey);
+                stringKey = Encoding.UTF8.GetString(key);
 
-				rsa.FromXmlString(stringKey);
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
 
-				return true;
-			}
-			catch (Exception ex)
-			{
-				throw new Exception($"Chave {keyType.GetDisplayName()} inválida. ");
-			}
-		}
+                rsa.FromXmlString(stringKey);
 
-		public static bool CheckSignature(string stringKey, byte[] signedMessageContent, byte[] signature)
-		{
-			try
-			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
-				SHA1Managed hash = new SHA1Managed();
-				byte[] hashedData;
+                return true;
+            }
+            catch {
+                throw new Exception($"Chave {keyType.GetDisplayName()} inválida. ");
+            }
+        }
 
-				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
-				rSACryptoServiceProvider.FromXmlString(stringKey);
-				bool isValidData = rSACryptoServiceProvider.VerifyData(signedMessageContent, CryptoConfig.MapNameToOID("SHA1"), signature);
-				hashedData = hash.ComputeHash(signedMessageContent);
+        public static bool CheckSignature(string stringKey, byte[] signedMessageContent, byte[] signature) {
+            try {
+                RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
+                SHA1Managed hash = new SHA1Managed();
+                byte[] hashedData;
 
-				bool isValidSignature = rSACryptoServiceProvider.VerifyHash(hashedData, CryptoConfig.MapNameToOID("SHA1"), signature);
+                stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
 
-				if (isValidData && isValidSignature)
-					return true;
+                rSACryptoServiceProvider.FromXmlString(stringKey);
 
-				return false;
-			}
-			catch (Exception ex)
-			{
-				throw new Exception(ex.Message);
-			}
-		}
+                bool isValidData = rSACryptoServiceProvider.VerifyData(signedMessageContent, CryptoConfig.MapNameToOID("SHA1"), signature);
 
-		public static string Sign(string stringKey, byte[] message)
-		{
-			try
-			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
-				SHA1Managed shaManaged = new SHA1Managed();
+                hashedData = hash.ComputeHash(signedMessageContent);
 
-				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
+                bool isValidSignature = rSACryptoServiceProvider.VerifyHash(hashedData, CryptoConfig.MapNameToOID("SHA1"), signature);
 
-				rSACryptoServiceProvider.FromXmlString(stringKey);
+                if (isValidData && isValidSignature) {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Clear();
+                    Console.Write("Assinatura verificado com sucesso. ");
+                    return true;
+                }
+                else {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Clear();
+                    Console.Write("Assinatura inválida. Não foi possível verificar a autenticidade da mensagem. ");
+                    return false;
+                }
+            }
+            catch (Exception ex) {
+                throw new Exception($"Erro ao verificar a assinatura da mensagem selecionada.\n Erro: {ex.Message}");
+            }
+        }
 
-				byte[] hashedData = shaManaged.ComputeHash(message);
+        public static string Sign(string stringKey, byte[] message) {
+            RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
+            SHA1Managed shaManaged = new SHA1Managed();
 
-				byte[] signedContent = rSACryptoServiceProvider.SignHash(hashedData, CryptoConfig.MapNameToOID("SHA1"));
+            try {
+                stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
 
-				return Convert.ToBase64String(signedContent);
-			}
-			catch (Exception ex)
-			{
+                rSACryptoServiceProvider.FromXmlString(stringKey);
 
-				throw new Exception($"Erro ao Assinar a mensagem.\nErro: {ex.Message}");
-			}
-		}
+                byte[] hashedData = shaManaged.ComputeHash(message);
 
-		public static string EncryptMessage(string stringKey, byte[] messageToEncrypt)
-		{
-			try
-			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
+                byte[] signedContent = rSACryptoServiceProvider.SignHash(hashedData, CryptoConfig.MapNameToOID("SHA1"));
 
-				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
+                return Convert.ToBase64String(signedContent);
+            }
+            catch (Exception ex) {
 
-				rSACryptoServiceProvider.FromXmlString(stringKey);
+                throw new Exception($"Erro ao Assinar a mensagem.\nErro: {ex.Message}");
+            }
+        }
 
-				byte[] encryptedData = rSACryptoServiceProvider.Encrypt(messageToEncrypt, false);
+        public static string EncryptMessage(string stringKey, byte[] messageToEncrypt) {
+            try {
+                RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
 
-				return Convert.ToBase64String(encryptedData);
-			}
-			catch (Exception ex)
-			{
-				throw new Exception($"Erro ao cifrar a mensagem.\nErro: {ex.Message}");
-			}
-		}
+                stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
 
-		public static string DecrypteMessage(string stringKey, byte[] encryptedMessage)
-		{
-			try
-			{
-				RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
+                rSACryptoServiceProvider.FromXmlString(stringKey);
 
-				stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
+                byte[] encryptedData = rSACryptoServiceProvider.Encrypt(messageToEncrypt, false);
 
-				rSACryptoServiceProvider.FromXmlString(stringKey);
+                return Convert.ToBase64String(encryptedData);
+            }
+            catch (Exception ex) {
+                throw new Exception($"Erro ao cifrar a mensagem.\nErro: {ex.Message}");
+            }
+        }
 
-				byte[] decryptedData = rSACryptoServiceProvider.Decrypt(encryptedMessage, false);
+        public static string DecrypteMessage(string stringKey, byte[] encryptedMessage) {
+            try {
+                RSACryptoServiceProvider rSACryptoServiceProvider = new RSACryptoServiceProvider(MESSAGE_SIZE);
 
-				return Encoding.UTF8.GetString(decryptedData);
-			}
-			catch (Exception ex)
-			{
-				throw new Exception($"Erro ao decifrar a mensagem.\nErro: {ex.Message}");
-			}
-		}
-	}
+                stringKey = Encoding.UTF8.GetString(Convert.FromBase64String(stringKey));
+
+                rSACryptoServiceProvider.FromXmlString(stringKey);
+
+                byte[] decryptedData = rSACryptoServiceProvider.Decrypt(encryptedMessage, false);
+
+                return Encoding.UTF8.GetString(decryptedData);
+            }
+            catch (Exception ex) {
+                throw new Exception($"Erro ao decifrar a mensagem.\nErro: {ex.Message}");
+            }
+        }
+    }
 }

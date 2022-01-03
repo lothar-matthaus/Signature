@@ -7,78 +7,63 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Signature.Repository
-{
-	static class MessageRepository
-	{
-		static string pathDirectory = "./DataFiles/";
-		static string filePath = "./DataFiles/Messages.json";
+namespace Signature.Repository {
+    static class MessageRepository {
+        static string pathDirectory = "./DataFiles/";
+        static string filePath = "./DataFiles/Messages.json";
 
-		public static void InitializeMessageRepository()
-		{
-			if (!Directory.Exists(pathDirectory))
-				Directory.CreateDirectory(pathDirectory);
-			
-			if (!File.Exists(filePath))
-				File.Create(filePath).Close();
-		}
+        public static void InitializeMessageRepository() {
+            if (!Directory.Exists(pathDirectory))
+                Directory.CreateDirectory(pathDirectory);
 
-		public static void Save(Message message)
-		{
-			FileStream fileStream = null;
-			StreamWriter streamWriter = null;
+            if (!File.Exists(filePath))
+                File.Create(filePath).Close();
+        }
 
-			try
-			{
-				using (fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write))
-				{
-					using (streamWriter = new StreamWriter(fileStream))
-					{
-						streamWriter.WriteLine(JsonSerializer.Serialize<Message>(message));
+        public static void Save(Message message) {
+            FileStream fileStream = null;
+            StreamWriter streamWriter = null;
 
-						streamWriter.Close();
-					}
-					fileStream.Close();
-				}
-			}
-			catch (IOException ex)
-			{
-				fileStream.Close();
-				streamWriter.Close();
+            try {
+                using (fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write)) {
+                    using (streamWriter = new StreamWriter(fileStream)) {
+                        streamWriter.WriteLine(JsonSerializer.Serialize<Message>(message));
 
-				throw ex;
-			}
-		}
+                        streamWriter.Close();
+                    }
 
-		public static List<Message> Get()
-		{
-			FileStream fileStream = null;
-			StreamReader streamReader = null;
+                    fileStream.Close();
+                }
+            }
+            catch(Exception ex) {
+                throw new Exception($"Ocorreu um erro ao salvar a mensagem.\nErro: {ex.Message}");
+            }
+        }
 
-			List<Message> personList = new List<Message>();
+        public static List<Message> Get() {
+            FileStream fileStream = null;
+            StreamReader streamReader = null;
 
-			try
-			{
-				using (fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-				{
-					using (streamReader = new StreamReader(fileStream))
-					{
-						while (!streamReader.EndOfStream)
-							personList.Add(JsonSerializer.Deserialize<Message>(streamReader.ReadLine()));
+            List<Message> messageList = new List<Message>();
 
-						streamReader.Close();
-					}
-					fileStream.Close();
-				}
-			}
-			catch (IOException ex)
-			{
-				fileStream.Close();
-				streamReader.Close();
+            try {
+                using (fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read)) {
+                    using (streamReader = new StreamReader(fileStream)) {
+                        while (!streamReader.EndOfStream)
+                            messageList.Add(JsonSerializer.Deserialize<Message>(streamReader.ReadLine()));
 
-				throw ex;
-			}
-			return personList;
-		}
-	}
+                        streamReader.Close();
+                    }
+                    fileStream.Close();
+                }
+            }
+            catch (Exception ex) {
+                fileStream.Close();
+                streamReader.Close();
+
+                throw new Exception($"Ocorreu um problema ao carregar a lista de mensagens.\nErro: {ex.Message}");
+            }
+            return messageList;
+        }
+    }
 }
