@@ -7,14 +7,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Signature {
-    internal class Program {
+namespace Signature
+{
+    internal class Program
+    {
 
-        static private void SendMessage(ref Message message) {
+        static private void SendMessage(ref Message message)
+        {
             Person fromPerson, toPerson;
             Console.WriteLine("----- Enviar nova mensagem -----");
 
-            try {
+            try
+            {
                 Console.WriteLine("Indique o remetente e destinatário.");
 
                 Console.Write("CPF/CNPJ do Remetente: ");
@@ -22,7 +26,8 @@ namespace Signature {
 
                 fromPerson = PersonRepository.Get(personDocument);
 
-                while (fromPerson == null) {
+                while (fromPerson == null)
+                {
                     Pause("A pessoa não existe.");
 
                     Console.Write("CPF/CNPJ do Remetente: ");
@@ -36,7 +41,8 @@ namespace Signature {
 
                 toPerson = PersonRepository.Get(personDocument);
 
-                while (toPerson == null) {
+                while (toPerson == null)
+                {
                     Pause("A pessoa não existe.");
 
                     Console.Write("CPF/CNPJ do Destinatário: ");
@@ -48,7 +54,8 @@ namespace Signature {
                 Console.Write("Mensagem: ");
                 string messageContent = Console.ReadLine();
 
-                if (message.MessageType == MessageType.Signed) {
+                if (message.MessageType == MessageType.Signed)
+                {
                     message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
                     message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
                     message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
@@ -56,11 +63,13 @@ namespace Signature {
                     Console.Write("Insira a chave privada do Remetente: ");
                     string privateKey = Console.ReadLine();
 
-                    if (RSA.ValidateKey(privateKey, KeyType.PrivateKey)) {
+                    if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
+                    {
                         message.Signature = RSA.Sign(privateKey, Convert.FromBase64String(message.Content));
                     }
                 }
-                else {
+                else
+                {
                     message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
                     message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
                     message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
@@ -68,25 +77,30 @@ namespace Signature {
                     message.MessageType = MessageType.Unsigned;
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 throw new Exception(ex.Message);
             }
         }
 
-        static void SendMessage() {
+        static void SendMessage()
+        {
             int opc = 0;
             Console.WriteLine("------------------------------\n" +
                               $"-1 - {MessageType.Signed.GetDisplayName()}\n-2 - {MessageType.Unsigned.GetDisplayName()}" +
                               $"\n------------------------------");
 
             Console.Write("Opção: ");
-            try {
+            try
+            {
                 opc = int.Parse(Console.ReadLine());
 
                 Message message = new Message();
 
-                switch (opc) {
-                    case 1: {
+                switch (opc)
+                {
+                    case 1:
+                        {
                             Console.Clear();
                             message.MessageType = MessageType.Signed;
                             SendMessage(ref message);
@@ -95,7 +109,8 @@ namespace Signature {
                             Pause("Mensagem enviada com sucesso. ");
                             break;
                         }
-                    case 2: {
+                    case 2:
+                        {
                             Console.Clear();
                             message.MessageType = MessageType.Unsigned;
                             SendMessage(ref message);
@@ -104,24 +119,29 @@ namespace Signature {
                             Pause("Mensagem enviada com sucesso. ");
                             break;
                         }
-                    default: {
+                    default:
+                        {
                             Console.ForegroundColor = ConsoleColor.Red;
                             Pause("Opção inválida. ");
                             break;
                         }
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Pause(ex.Message + " ");
                 return;
             }
         }
 
-        private static void ProcessMessage(Message message) {
+        private static void ProcessMessage(Message message)
+        {
 
-            try {
-                if (message.MessageType == MessageType.Signed) {
+            try
+            {
+                if (message.MessageType == MessageType.Signed)
+                {
 
                     Console.Clear();
 
@@ -130,8 +150,10 @@ namespace Signature {
                     Console.Write("Digite a chave pública do remetente:");
                     string publicKey = Console.ReadLine();
 
-                    if (RSA.ValidateKey(publicKey, KeyType.PublicKey)) {
-                        if (RSA.CheckSignature(publicKey, Convert.FromBase64String(message.Content), Convert.FromBase64String(message.Signature))) {
+                    if (RSA.ValidateKey(publicKey, KeyType.PublicKey))
+                    {
+                        if (RSA.CheckSignature(publicKey, Convert.FromBase64String(message.Content), Convert.FromBase64String(message.Signature)))
+                        {
                             Console.Clear();
 
                             Console.ForegroundColor = ConsoleColor.Green;
@@ -140,14 +162,16 @@ namespace Signature {
                             Console.Write("Digite a chave privada do destinatário:");
                             string privateKey = Console.ReadLine();
 
-                            if (RSA.ValidateKey(privateKey, KeyType.PrivateKey)) {
+                            if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
+                            {
                                 message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
 
                                 Console.Clear();
                                 Pause($"Mensagem decodificada:\n{message}");
                             }
                         }
-                        else {
+                        else
+                        {
                             Console.Clear();
                             Console.ForegroundColor = ConsoleColor.Red;
                             Pause("A assinatura é inválida.\n");
@@ -156,22 +180,27 @@ namespace Signature {
                     }
                 }
             }
-            catch {
+            catch
+            {
                 throw new Exception($"Ocorreu um erro ao processar a mensagem de ID '{message.Id}'");
             }
         }
 
-        static void ShowMessages() {
+        static void ShowMessages()
+        {
             List<Message> messages = MessageRepository.Get();
 
-            try {
-                if (messages == null || messages.Count == 0) {
+            try
+            {
+                if (messages == null || messages.Count == 0)
+                {
                     Console.Clear();
                     Pause($"----------------------------------------\nNão há mensagens para exibir.\n----------------------------------------\n");
                     return;
                 }
 
-                messages.ForEach(message => {
+                messages.ForEach(message =>
+                {
                     Console.Write(message);
                 });
 
@@ -180,11 +209,13 @@ namespace Signature {
 
                 Message message = messages.Find(message => message.Id == id);
 
-                while (message == null) {
+                while (message == null)
+                {
                     Console.Clear();
                     Pause($"Não há mensagens com o ID '{id}' informado. ");
 
-                    messages.ForEach(message => {
+                    messages.ForEach(message =>
+                    {
                         Console.Write(message);
                     });
 
@@ -196,49 +227,57 @@ namespace Signature {
 
                 ProcessMessage(message);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Pause(ex.Message);
                 return;
             }
         }
 
-        static void ShowAllPersons() {
+        static void ShowAllPersons()
+        {
             List<Person> personList = PersonRepository.Get();
 
             Console.Clear();
 
-            personList.ForEach(person => {
+            personList.ForEach(person =>
+            {
                 Console.WriteLine(person);
             });
         }
 
-        static void CreatePerson() {
+        static void CreatePerson()
+        {
             Person person = new Person();
             Console.WriteLine("----- Criar nova pessoa ------");
-            try {
+            try
+            {
                 Console.Write("Nome: ");
                 person.Name = Console.ReadLine();
 
                 Console.Write("CPF/CNPJ: ");
                 person.DocumentNumber = Console.ReadLine();
 
-                person.CreateKeys();
-
                 if (PersonValidation.ValidatePersonData(person))
+                {
+                    person.CreateKeys();
                     PersonRepository.Save(person);
-                    
+                }
+
                 Console.ForegroundColor = ConsoleColor.Green;
                 Pause("Pessoa criada com sucesso. ");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Pause($"Erro ao criar pessoa. {ex.Message}");
                 return;
             }
         }
 
-        static void Pause(string message = null) {
+        static void Pause(string message = null)
+        {
             Console.WriteLine($"{message}Pressione uma tecla para continuar...");
 
             Console.ForegroundColor = ConsoleColor.Gray;
@@ -250,38 +289,45 @@ namespace Signature {
             Console.Clear();
         }
 
-        static void Menu() {
+        static void Menu()
+        {
             int opc = 0;
             Console.Write("--------------------------------\n" +
                 "-1 - Criar Pessoa\n-2 - Ver pessoas\n-3 - Enviar Mensagem\n-4 - Ver mensagens\n-5 - Sair\n" +
                 "--------------------------------\nOpção: ");
-            try {
+            try
+            {
                 if (Console.KeyAvailable)
                     Console.ReadKey(true);
 
                 opc = int.Parse(Console.ReadLine());
 
-                switch (opc) {
-                    case 1: {
+                switch (opc)
+                {
+                    case 1:
+                        {
                             Console.Clear();
                             CreatePerson();
                             Menu();
                             break;
                         }
-                    case 2: {
+                    case 2:
+                        {
                             Console.Clear();
                             ShowAllPersons();
                             Pause();
                             Menu();
                             break;
                         }
-                    case 3: {
+                    case 3:
+                        {
                             Console.Clear();
                             SendMessage();
                             Menu();
                             break;
                         }
-                    case 4: {
+                    case 4:
+                        {
                             Console.Clear();
                             ShowMessages();
                             Menu();
@@ -293,7 +339,8 @@ namespace Signature {
                         break;
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.Clear();
                 Console.ForegroundColor = ConsoleColor.Red;
                 Pause(ex.Message + " ");
@@ -302,12 +349,14 @@ namespace Signature {
 
         }
 
-        static void Main(string[] args) {
+        static void Main(string[] args)
+        {
 
             PersonRepository.InitializePersonRepository();
             MessageRepository.InitializeMessageRepository();
 
-            try {
+            try
+            {
                 Person alice = new Person();
 
                 alice.Name = "Alice Maria da Silva";
@@ -320,19 +369,22 @@ namespace Signature {
                 bob.DocumentNumber = "82341131321";
                 bob.PersonType = PersonType.Individual;
 
-                if (PersonRepository.Get(alice.DocumentNumber) == null) {
+                if (PersonRepository.Get(alice.DocumentNumber) == null)
+                {
                     alice.CreateKeys();
                     PersonRepository.Save(alice);
                 }
 
-                if (PersonRepository.Get(bob.DocumentNumber) == null) {
+                if (PersonRepository.Get(bob.DocumentNumber) == null)
+                {
                     bob.CreateKeys();
                     PersonRepository.Save(bob);
                 }
 
                 Menu();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.Write(ex.Message);
             }
         }

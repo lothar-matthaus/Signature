@@ -66,7 +66,7 @@ namespace Signature.Entity
 		public override string ToString()
 		{
 			return $"--------------------------------------------------\n" +
-				$"Nome {this.Name}\nTipo: {this.PersonType.GetDisplayName()}\nCPF/CNPJ: {this.DocumentNumber}\nChave Pública: {this.PublicKey}" +
+				$"Nome: {this.Name}\nTipo: {this.PersonType.GetDisplayName()}\nCPF/CNPJ: {this.DocumentNumber}\nChave Pública: {this.PublicKey}" +
 				$"\n--------------------------------------------------";
 		}
 	}

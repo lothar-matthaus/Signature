@@ -1,14 +1,10 @@
 ﻿using Signature.Entity.Enum;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
 
-namespace Signature.Encryptation {
+namespace Signature.Encryptation
+{
     static class RSA {
         private static int MESSAGE_SIZE = 2048;
 

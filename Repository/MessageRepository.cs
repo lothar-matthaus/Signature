@@ -2,12 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace Signature.Repository {
+namespace Signature.Repository
+{
     static class MessageRepository {
         static string pathDirectory = "./DataFiles/";
         static string filePath = "./DataFiles/Messages.json";
