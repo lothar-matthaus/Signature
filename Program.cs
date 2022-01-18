@@ -137,7 +137,6 @@ namespace Signature
 
         private static void ProcessMessage(Message message)
         {
-
             try
             {
                 if (message.MessageType == MessageType.Signed)
@@ -177,6 +176,24 @@ namespace Signature
                             Pause("A assinatura é inválida.\n");
                             return;
                         }
+                    }
+                }
+                else
+                {
+                    Console.Write("Digite a chave privada do destinatário:");
+                    string privateKey = Console.ReadLine();
+
+                    if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
+                    {
+                        Console.Clear();
+
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Pause("A chave privada é válida. \n");
+
+                        message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
+
+                        Console.Clear();
+                        Pause($"Mensagem decodificada:\n{message}");
                     }
                 }
             }
