@@ -58,14 +58,14 @@ namespace Signature
                 {
                     message.FromPerson = new KeyValuePair<string, string>(fromPerson.DocumentNumber, fromPerson.Name);
                     message.ToPerson = new KeyValuePair<string, string>(toPerson.DocumentNumber, toPerson.Name);
-                    message.Content = messageContent;
+                    message.Content = RSA.EncryptMessage(toPerson.PublicKey, Encoding.UTF8.GetBytes(messageContent));
 
                     Console.Write("Insira a chave privada do Remetente: ");
                     string privateKey = Console.ReadLine();
 
                     if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
                     {
-                        message.Signature = RSA.Sign(privateKey, Encoding.UTF8.GetBytes(messageContent));
+                        message.Signature = RSA.Sign(privateKey, Encoding.UTF8.GetBytes(message.Content));
                     }
                 }
                 else
@@ -148,20 +148,25 @@ namespace Signature
                     Console.Write("Digite a chave pública do remetente:");
                     string publicKey = Console.ReadLine();
 
-                    byte[] content = Encoding.UTF8.GetBytes(message.Content);
-
                     if (RSA.ValidateKey(publicKey, KeyType.PublicKey))
                     {
-                        if (RSA.CheckSignature(publicKey, content, Convert.FromBase64String(message.Signature)))
+                        if (RSA.CheckSignature(publicKey, Encoding.UTF8.GetBytes(message.Content), Convert.FromBase64String(message.Signature)))
                         {
                             Console.Clear();
 
                             Console.ForegroundColor = ConsoleColor.Green;
                             Pause($"A mensagem é autêntica e a chave informada pertence a {message.FromPerson.Value}. \n");
 
-                            Console.Clear();
-                            Pause($"Mensagem verificada e autenticada:\n{message}");
+                            Console.Write("Digite a chave privada do destinatário:");
+                            string privateKey = Console.ReadLine();
 
+                            if (RSA.ValidateKey(privateKey, KeyType.PrivateKey))
+                            {
+                                message.Content = RSA.DecrypteMessage(privateKey, Convert.FromBase64String(message.Content));
+
+                                Console.Clear();
+                                Pause($"Mensagem verificada e autenticada:\n{message}");
+                            }
                         }
                         else
                         {
